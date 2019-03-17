@@ -1,3 +1,4 @@
+import subprocess
 from random import randint
 
 nombre_capteurs = 0
@@ -6,7 +7,7 @@ capteurs_zones_duree_vie = []
 erreur_lecture = False
 
 def lire_fichier(emplacement):
-    global nombre_capteurs, nombre_zones, erreur_lecture, capteurs_zones_duree_vie
+    global nombre_capteurs, nombre_zones, erreur_lecture, capteurs_zones_duree_vie, duree_vie_capteur
     with open(emplacement, 'r') as fichier_a_lire:
         nombre_capteurs = int(fichier_a_lire.readline().strip())
         nombre_zones = int(fichier_a_lire.readline().strip())
@@ -69,33 +70,55 @@ def trouver_configurations_elementaires_sur_grands_fichiers(nombre_iterations = 
             nombre_iterations -= 1
     return configurations_elementaires
 
+
 lire_fichier('test')
-print(capteurs_zones_duree_vie)
 if not erreur_lecture:
     print("Lecture effectuée avec succès !")
+print("Durées:")
+print(duree_vie_capteur)
 
 configurationElementaires = trouver_configurations_elementaires_sur_grands_fichiers();
+print("Configurations élémentaires:")
 print(configurationElementaires)
 
 
-premiereLigne = "Maximize "
-for configuration in range(nombre_capteurs):
-    premiereLigne += "t" + str(configuration + 1) + " + "
+def glpk(configs, durees, nbCap):
+    programme = "prog.lp "
+    results = "resultats.txt"
+    fichier = open("prog.lp", "w")
+    premiereLigne = "Maximize "
+    for configuration in range(nbCap):
+        premiereLigne += "t" + str(configuration + 1) + " + "
 
-premiereLigne = premiereLigne[:-3]
-print(premiereLigne)
-print("Subject To ")
-ligne = ""
-for numeroLigne in range(nombre_capteurs):
-    for configuration in range(nombre_capteurs):
-        for capteur in range(len(configurationElementaires[configuration])):
-            if numeroLigne == configurationElementaires[configuration][capteur]:
-                ligne += "t" + str(configuration + 1) + " + "
-    ligne = ligne[:-3]  # pour enlever le dernier plus
-    ligne += " <= " + str(capteurs_zones_duree_vie[numeroLigne])
+    premiereLigne = premiereLigne[:-3]
+    fichier.write(premiereLigne + "\n")
+    fichier.write("\nSubject To \n")
+    ligne = ""
+    for ensemble in range(nbCap):
+        numeroLigne = ensemble
 
-    if (len(ligne) < 7):
-        ligne += "\n"
-    else:
-        ligne += "\n"
-        print(ligne)
+        for groupe in range(nbCap):
+            for capteur in range(len(configs[groupe])):
+                if numeroLigne == configs[groupe][capteur]:
+                    ligne += "t" + str(groupe + 1) + " + "
+
+        ligne = ligne[:-3]
+        ligne += " <= " + str(durees[numeroLigne])
+
+        if (len(ligne) < 7):
+            ligne = "\n"
+        else:
+            fichier.write(ligne)
+            ligne = "\n"
+
+    fichier.write(ligne)
+    fichier.write("\n\nEND\n")
+    cmd = "glpsol --cpxlp " + programme + "-o " + results
+    print("\n\n" + cmd)
+    fichier.close()
+    subprocess.getoutput(cmd)
+
+
+glpk(configurationElementaires, duree_vie_capteur, nombre_capteurs)
+
+
