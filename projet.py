@@ -73,4 +73,29 @@ lire_fichier('test')
 print(capteurs_zones_duree_vie)
 if not erreur_lecture:
     print("Lecture effectuée avec succès !")
-print(trouver_configurations_elementaires_sur_grands_fichiers())
+
+configurationElementaires = trouver_configurations_elementaires_sur_grands_fichiers();
+print(configurationElementaires)
+
+
+premiereLigne = "Maximize "
+for configuration in range(nombre_capteurs):
+    premiereLigne += "t" + str(configuration + 1) + " + "
+
+premiereLigne = premiereLigne[:-3]
+print(premiereLigne)
+print("Subject To ")
+ligne = ""
+for numeroLigne in range(nombre_capteurs):
+    for configuration in range(nombre_capteurs):
+        for capteur in range(len(configurationElementaires[configuration])):
+            if numeroLigne == configurationElementaires[configuration][capteur]:
+                ligne += "t" + str(configuration + 1) + " + "
+    ligne = ligne[:-3]  # pour enlever le dernier plus
+    ligne += " <= " + str(capteurs_zones_duree_vie[numeroLigne])
+
+    if (len(ligne) < 7):
+        ligne += "\n"
+    else:
+        ligne += "\n"
+        print(ligne)
