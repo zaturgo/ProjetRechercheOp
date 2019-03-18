@@ -30,17 +30,12 @@ def lire_fichier(emplacement):
             erreur_lecture = True
 
 
-def trouver_configurations_elementaires_sur_grands_fichiers(nombre_iterations = 10):
-    if nombre_iterations > nombre_capteurs * nombre_zones / 2:
-        nombre_iterations = nombre_capteurs
-
-    if nombre_capteurs < 5 or nombre_zones < 5:
-        nombre_iterations = 0
-
+def trouver_configurations_elementaires_sur_grands_fichiers(nombre_iterations = 1000):
     configurations_elementaires = []
+    configuration_existante = 0
 
     # Boucle pour l'obtention du nombre de résultats souhaités
-    while nombre_iterations > 0:
+    while nombre_iterations > 0 and configuration_existante < 1000:
         # Boucle permettant de trouver une configuration élémentaire
         capteur_par_zone_a_couvrir = [-1] * nombre_zones
         for zone in range(1, nombre_zones + 1):
@@ -68,6 +63,10 @@ def trouver_configurations_elementaires_sur_grands_fichiers(nombre_iterations = 
         if capteur_par_zone_a_couvrir not in configurations_elementaires:
             configurations_elementaires.append(capteur_par_zone_a_couvrir)
             nombre_iterations -= 1
+            configuration_existante = 0
+        else:
+            configuration_existante += 1
+    print(configuration_existante)
     return configurations_elementaires
 
 
@@ -120,5 +119,3 @@ def glpk(configs, durees, nbCap):
 
 
 glpk(configurationElementaires, duree_vie_capteur, nombre_capteurs)
-
-
