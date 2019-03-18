@@ -75,7 +75,6 @@ if not erreur_lecture:
     print("Lecture effectuée avec succès !")
 print("Durées:")
 print(duree_vie_capteur)
-
 configurationElementaires = trouver_configurations_elementaires_sur_grands_fichiers();
 print("Configurations élémentaires:")
 print(configurationElementaires)
@@ -85,37 +84,28 @@ def glpk(configs, durees, nbCap):
     programme = "prog.lp "
     results = "resultats.txt"
     fichier = open("prog.lp", "w")
-    premiereLigne = "Maximize "
-    for configuration in range(nbCap):
+    premiereLigne = "Maximize "  # Ecriture première ligne
+    for configuration in range(len(configs)):  # Boucle sur toutes les configurations initiales
         premiereLigne += "t" + str(configuration + 1) + " + "
 
-    premiereLigne = premiereLigne[:-3]
+    premiereLigne = premiereLigne[:-3]  # Suppression dernier +
     fichier.write(premiereLigne + "\n")
     fichier.write("\nSubject To \n")
-    ligne = ""
-    for ensemble in range(nbCap):
-        numeroLigne = ensemble
-
-        for groupe in range(nbCap):
-            for capteur in range(len(configs[groupe])):
-                if numeroLigne == configs[groupe][capteur]:
-                    ligne += "t" + str(groupe + 1) + " + "
-
-        ligne = ligne[:-3]
-        ligne += " <= " + str(durees[numeroLigne])
-
-        if (len(ligne) < 7):
-            ligne = "\n"
-        else:
+    for capteur in range(nbCap):  # Boucle sur le nombre de capteurs
+        ligne = ""
+        for groupe in configs:  # Pour groupe à l'intérieur des configurations initiales
+            if capteur in groupe:  # Si capteur dans le groupe
+                    ligne += "t" + str(configs.index(groupe) + 1) + " + "
+        if len(ligne) != 0:  # Si la ligne n'est pas vide, on écrit
+            ligne = ligne[:-3]  # Suppression dernier +
+            ligne += " <= " + str(durees[capteur])
             fichier.write(ligne)
-            ligne = "\n"
-
-    fichier.write(ligne)
+            fichier.write("\n")
     fichier.write("\n\nEND\n")
-    cmd = "glpsol --cpxlp " + programme + "-o " + results
+    cmd = "glpsol --cpxlp " + programme + "-o " + results  # On forme la commande
     print("\n\n" + cmd)
     fichier.close()
-    subprocess.getoutput(cmd)
+    subprocess.getoutput(cmd)  # On la lance
 
 
 glpk(configurationElementaires, duree_vie_capteur, nombre_capteurs)
